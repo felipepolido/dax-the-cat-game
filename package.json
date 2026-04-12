@@ -1,0 +1,18 @@
+{
+  "name": "dax-the-cat",
+  "version": "0.1.0",
+  "description": "Dax the Cat - A 2D side-scroller adventure game",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "^3.80.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
