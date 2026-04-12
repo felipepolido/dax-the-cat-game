@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dax the Cat</title>
   <style>
     * { margin: 0; padding: 0; }
@@ -13,11 +13,59 @@
       align-items: center;
       height: 100vh;
       overflow: hidden;
+      touch-action: none;
+    }
+    /* Portrait mode warning for mobile */
+    #rotate-warning {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #1a1a2e;
+      z-index: 9999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #FFD700;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #rotate-warning .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: wiggle 1.5s ease-in-out infinite;
+    }
+    #rotate-warning p {
+      font-size: 20px;
+      margin-top: 10px;
+      color: #ccc;
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-20deg); }
+      75% { transform: rotate(20deg); }
+    }
+    @media (orientation: portrait) and (max-width: 900px) {
+      #rotate-warning { display: flex; }
+      #game { display: none; }
     }
   </style>
-  <script type="module" crossorigin src="/dax-the-cat-game/assets/index-C62VM--w.js"></script>
+  <script type="module" crossorigin src="/dax-the-cat-game/assets/index-u9THWgkn.js"></script>
 </head>
 <body>
+  <div id="rotate-warning">
+    <div class="icon">📱</div>
+    <div style="font-size: 24px; font-weight: bold;">Rotate Your Device!</div>
+    <p>Dax the Cat plays best in landscape mode</p>
+  </div>
   <div id="game"></div>
+  <script>
+    // Try to lock orientation to landscape on mobile
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+      }
+    } catch (e) {}
+  </script>
 </body>
 </html>
