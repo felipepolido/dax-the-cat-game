@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Dax the Cat</title>
   <style>
     * { margin: 0; padding: 0; }
@@ -11,9 +11,24 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      width: 100dvw;
+      height: 100dvh;
+      min-height: 100vh;
       overflow: hidden;
       touch-action: none;
+      padding:
+        env(safe-area-inset-top, 0)
+        env(safe-area-inset-right, 0)
+        env(safe-area-inset-bottom, 0)
+        env(safe-area-inset-left, 0);
+      box-sizing: border-box;
+    }
+    #game {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     /* Portrait mode warning for mobile */
     #rotate-warning {
@@ -49,7 +64,7 @@
       #rotate-warning { display: flex; }
     }
   </style>
-  <script type="module" crossorigin src="/dax-the-cat-game/assets/index-D5-_U_LM.js"></script>
+  <script type="module" crossorigin src="/dax-the-cat-game/assets/index-Cbq4e9MR.js"></script>
 </head>
 <body>
   <div id="rotate-warning">
@@ -59,19 +74,69 @@
   </div>
   <div id="game"></div>
   <script>
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    let orientationReloadTimer;
+    let orientationPollTimer;
+
     // Try to lock orientation to landscape on mobile
     try {
       if (screen.orientation && screen.orientation.lock) {
         screen.orientation.lock('landscape').catch(() => {});
       }
     } catch (e) {}
-    // After orientation change, nudge Phaser to re-fit the canvas
-    window.addEventListener('orientationchange', function() {
-      setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 200);
-    });
-    screen.orientation && screen.orientation.addEventListener('change', function() {
-      setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 200);
-    });
+
+    function getViewportSize() {
+      const viewport = window.visualViewport;
+      return {
+        width: Math.round(viewport ? viewport.width : window.innerWidth),
+        height: Math.round(viewport ? viewport.height : window.innerHeight),
+      };
+    }
+
+    function waitForStableViewportAndReload() {
+      const startedAt = Date.now();
+      let lastSample = null;
+      let stableCount = 0;
+
+      clearInterval(orientationPollTimer);
+      orientationPollTimer = setInterval(function() {
+        const sample = getViewportSize();
+        const isLandscape = sample.width > sample.height;
+
+        if (!isLandscape) {
+          lastSample = sample;
+          stableCount = 0;
+          if (Date.now() - startedAt > 1800) {
+            clearInterval(orientationPollTimer);
+          }
+          return;
+        }
+
+        if (lastSample && lastSample.width === sample.width && lastSample.height === sample.height) {
+          stableCount += 1;
+        } else {
+          stableCount = 0;
+          lastSample = sample;
+        }
+
+        if (stableCount >= 2 || Date.now() - startedAt > 1800) {
+          clearInterval(orientationPollTimer);
+          window.location.reload();
+        }
+      }, 120);
+    }
+
+    function reloadForOrientationChange() {
+      if (!isTouchDevice) return;
+      clearTimeout(orientationReloadTimer);
+      orientationReloadTimer = setTimeout(function() {
+        waitForStableViewportAndReload();
+      }, 150);
+    }
+
+    window.addEventListener('orientationchange', reloadForOrientationChange);
+    screen.orientation && screen.orientation.addEventListener('change', reloadForOrientationChange);
+    window.visualViewport && window.visualViewport.addEventListener('resize', reloadForOrientationChange);
   </script>
 </body>
 </html>
