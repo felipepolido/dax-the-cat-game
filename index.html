@@ -11,9 +11,12 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      width: 100vw;
       width: 100dvw;
+      width: 100svw;
+      height: 100vh;
       height: 100dvh;
-      min-height: 100vh;
+      height: 100svh;
       overflow: hidden;
       touch-action: none;
       padding:
@@ -64,7 +67,7 @@
       #rotate-warning { display: flex; }
     }
   </style>
-  <script type="module" crossorigin src="/dax-the-cat-game/assets/index-Fz6ewwwW.js"></script>
+  <script type="module" crossorigin src="/dax-the-cat-game/assets/index-B9eIc2HE.js"></script>
 </head>
 <body>
   <div id="rotate-warning">
@@ -93,7 +96,16 @@
       };
     }
 
-    function waitForStableViewportAndReload() {
+    function currentOrientation() {
+      const { width, height } = getViewportSize();
+      return width >= height ? 'landscape' : 'portrait';
+    }
+
+    // Snapshot orientation at boot so we only reload when it ACTUALLY flips,
+    // not on every URL-bar show/hide (which fires visualViewport.resize).
+    let lastOrientation = currentOrientation();
+
+    function waitForStableLandscapeAndReload() {
       const startedAt = Date.now();
       let lastSample = null;
       let stableCount = 0;
@@ -126,17 +138,21 @@
       }, 120);
     }
 
-    function reloadForOrientationChange() {
+    function handleOrientationChange() {
       if (!isTouchDevice) return;
+      const next = currentOrientation();
+      if (next === lastOrientation) return; // URL-bar toggle, not a real rotation
+      lastOrientation = next;
       clearTimeout(orientationReloadTimer);
       orientationReloadTimer = setTimeout(function() {
-        waitForStableViewportAndReload();
+        waitForStableLandscapeAndReload();
       }, 150);
     }
 
-    window.addEventListener('orientationchange', reloadForOrientationChange);
-    screen.orientation && screen.orientation.addEventListener('change', reloadForOrientationChange);
-    window.visualViewport && window.visualViewport.addEventListener('resize', reloadForOrientationChange);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    screen.orientation && screen.orientation.addEventListener('change', handleOrientationChange);
+    // Intentionally NOT subscribing to visualViewport.resize — that fires on
+    // every URL-bar movement and is exactly the noise we want to ignore.
   </script>
 </body>
 </html>
